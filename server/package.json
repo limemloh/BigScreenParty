@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --watch '**/*.ts' --exec './node_modules/.bin/ts-node' index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "up": "ts-node index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@funkia/hareactive": "0.0.31",
+    "minimist": "^1.2.0",
+    "ws": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^6.0.69",
+    "@types/ws": "0.0.40",
+    "nodemon": "^1.11.0",
+    "ts-node": "^3.0.2",
+    "typescript": "^2.3.0-dev.20170418"
+  }
+}

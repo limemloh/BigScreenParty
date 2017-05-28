@@ -1,0 +1,22 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/webpack-dev-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-loader": "^2.0.3",
+    "typescript": "^2.3.2",
+    "webpack": "2.2.1",
+    "webpack-dev-server": "^2.4.1"
+  },
+  "dependencies": {
+    "@funkia/hareactive": "0.0.31",
+    "@funkia/jabz": "0.0.22",
+    "@funkia/turbine": "^0.1.0"
+  }
+}

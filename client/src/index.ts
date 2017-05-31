@@ -1,17 +1,14 @@
-import { Behavior } from '@funkia/hareactive/dist/defs';
 import { runComponent, modelView, elements } from "@funkia/turbine";
-import { stepper, Stream, performStream, time, snapshot, sample } from "@funkia/hareactive";
+import { stepper, Stream, performStream, time, snapshot, sample, Behavior, Now} from "@funkia/hareactive";
 import { fgo, go, lift } from '@funkia/jabz';
-import { send, subscribe } from "./websocket";
-const { div, h1, span, button, br } = elements;
+import { loopSocket } from "./hareactive-websocket";
+const { div, h1, span, button, br, input } = elements;
 
 const wsUrl = "ws://localhost:8080/api";
 const socket = new WebSocket(wsUrl);
+console.log(socket);
 socket.onclose = (a) => console.log(a);
 
-type Model = {
-  sendClick: Stream<any>
-}
 
 type Timer = {
   start: Stream<any>,
@@ -20,37 +17,33 @@ type Timer = {
 
 const timerModel = fgo(function* ({start, stop}) {
   const now = yield sample(time);
-  const sendTime = stepper(now, snapshot(time, start));
-  const received = subscribe(socket);
-  const receivedTime = stepper(now, snapshot(time, stop));
+  const sendTime: Behavior<number> = yield sample(stepper(now, snapshot(time, start)));
+  const receivedTime: Behavior<number> = yield sample(stepper(now, snapshot(time, stop)));
   const timed = lift((b, a) => Math.max(a - b, 0), sendTime, receivedTime);
   return {timed};
 });
 
-const model = fgo(function* model({sendClick}) {
-  const sendMessages = sendClick.mapTo(send(socket, JSON.stringify({value: "click"})));
-  const received = subscribe(socket);
+type Model = {
+  value: Behavior<string>,
+  sendClick: Stream<any>
+}
 
-  const {timed: latency} = yield timerModel({start: sendClick, stop: received})
-  
-  const lastMessage = stepper("Nothing received yet ", received);
-
-  yield performStream(sendMessages);
-  return {lastMessage, latency};
-});
+function model({sendClick, value}: Model): Now<any> {
+  return loopSocket({name: value.log(), click: sendClick}, socket).chain(({name, click}) => Now.of({lastMessage: name}));
+}
 
 type View = {
-  lastMessage: Behavior<string>,
-  latency: Behavior<string>
+  lastMessage: Behavior<string>
 };
 
-const view = ({lastMessage, latency}: View) => div([
+const view = ({lastMessage}: View) => div([
   h1("Socket Test"),
-  span(["Received: ", lastMessage, " ", latency, " ms"]),
+  input({output: {value: "inputValue"}}),
+  span(["Received: ", lastMessage]),
   br,
   button({ output: { sendClick: "click" } }, "send")
 ]);
 
-const app = modelView(model, view)();
+const app = modelView<Model, View, {}>(model, view)();
 
-runComponent("#mount", app);
+socket.onopen = () => runComponent("#mount", app);
